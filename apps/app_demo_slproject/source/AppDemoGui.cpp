@@ -1810,6 +1810,14 @@ void AppDemoGui::buildMenuBar(SLScene* s, SLSceneView* sv)
                     ImGui::EndMenu();
                 }
 
+                if (ImGui::BeginMenu("Facial Animation"))
+                {
+                    if (ImGui::MenuItem("Main", nullptr, sid == SID_FacialAnimation))
+                        s->onLoad(am, s, sv, SID_FacialAnimation);
+
+                    ImGui::EndMenu();
+                }
+
                 SLstring erlebarPath = AppDemo::dataPath + "erleb-AR/models/";
                 SLstring modelBR2    = erlebarPath + "bern/bern-christoffel.gltf";
                 SLstring modelBFH    = erlebarPath + "biel/Biel-BFH-Rolex.gltf";

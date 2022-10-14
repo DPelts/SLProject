@@ -6250,6 +6250,28 @@ resolution shadows near the camera and lower resolution shadows further away.");
         }
     }
 
+    else if (sceneID == SID_FacialAnimation)
+    {
+
+
+        s->name("Facial Animation");
+        s->info("Detects facial landmarks and morphs them onto Sintel");
+        SLNode* scene = new SLNode("Scene Node");
+        s->root3D(scene);
+        SLCamera* cam = new SLCamera("Camera");
+        cam->translation(0.0f, 1.0f, 0.0f);
+        cam->lookAt(0.0f, 0.0f, 0.0f);
+        cam->focalDist(1.0f);
+        cam->setInitialState();
+        scene->addChild(cam);
+        sv->camera(cam);
+    
+
+
+        sv->sceneViewCamera()->background().colors(SLCol4f(0.8f, 0.8f, 0.8f),
+                                                   SLCol4f(0.2f, 0.2f, 0.2f));
+    }
+
     else if (sceneID == SID_Benchmark1_LargeModel) //..............................................
     {
         SLstring largeFile = configPath + "models/xyzrgb_dragon/xyzrgb_dragon.ply";
