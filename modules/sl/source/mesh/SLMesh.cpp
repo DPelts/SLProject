@@ -1492,7 +1492,6 @@ a weight and an index. After the transform the VBO have to be updated.
 This skinning process can also be done (a lot faster) on the GPU.
 This software skinning is also needed for ray or path tracing.
 */
-// TODO: Contunue here!
 void SLMesh::transformSkin(const std::function<void(SLMesh*)>& cbInformNodes)
 {
     // create the secondary buffers for P and N once
@@ -1564,10 +1563,45 @@ void SLMesh::transformSkin(const std::function<void(SLMesh*)>& cbInformNodes)
     }
 }
 //-----------------------------------------------------------------------------
-void SLMesh::transformSkinWithBlendShapes(const std::function<void(SLMesh*)>& cbInformNodes)
+void SLMesh::transformSkinWithBlendShapes( SLint bsID)
 {
+    if (skinnedP.empty())
+    {
+        skinnedP.resize(P.size());
+        for (SLulong i = 0; i < P.size(); ++i)
+            skinnedP[i] = P[i];
+    }
 
+    // notify Parent Nodes to update AABB
+    // cbInformNodes(this);
 
+    // temporarily set finalP and finalN
+    _finalP = &skinnedP;
+
+    _accelStructIsOutOfDate = true;
+
+    // for (SLint i = 0; i < BS[bsID].size(); i++)
+    // {
+    //     SLVec3f dir = (BS[bsID][i] - P[i]) * bsTime[bsID];
+    //     // skinnedP[i] = SLVec3f::ZERO;
+    //     skinnedP[i] += dir + P[i];
+    // }
+
+    for (SLint i = 0; i < BS[0].size(); i++)
+    {
+        skinnedP[i] = P[i];
+        for (SLint j = 0; j < bsCount; j++)
+        {
+            SLVec3f dir = (BS[j][i] - P[i]) * bsTime[j];
+            // skinnedP[i] = SLVec3f::ZERO;
+            skinnedP[i] += dir;
+        }
+    }
+
+    // if (_vao.vaoID())
+    // {
+    //     _vao.updateAttrib(AT_position, _finalP);
+    // }
 }
 //-----------------------------------------------------------------------------
 #ifdef SL_HAS_OPTIX

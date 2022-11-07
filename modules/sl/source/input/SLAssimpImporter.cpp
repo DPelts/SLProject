@@ -1082,11 +1082,14 @@ SLMesh* SLAssimpImporter::loadMesh(SLAssetManager* am, aiMesh* mesh)
             {
                 m->BS[i].clear();
                 m->BS[i].resize(blendShapeLength);
-
+                m->bsTime[i] = 0.0f;
+                m->bsHasChanged[i] = false;
+                m->bsCount++;
+                
                 for (int j = 0; j < blendShapeLength; j++)
                 {
                     SLVec3f vertex = SLVec3f(mesh->mAnimMeshes[i]->mVertices[j].x, mesh->mAnimMeshes[i]->mVertices[j].y, mesh->mAnimMeshes[i]->mVertices[j].z);
-                    m->BS[i].push_back(vertex);
+                    m->BS[i][j] = vertex;
                 }
             }
         }

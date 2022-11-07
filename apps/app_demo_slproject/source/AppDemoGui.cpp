@@ -966,10 +966,28 @@ void AppDemoGui::build(SLScene* s, SLSceneView* sv)
                 ImGuiWindowFlags window_flags = 0;
                 window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
                 ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[1]);
-                ImGui::Begin("Transform Selected Node", &showTransform, window_flags);
+                ImGui::Begin("BlendShape", &showBlendShapeRegulator, window_flags);
                 if (s->singleNodeSelected())
                 {
+                    SLNode* selNode = s->singleNodeSelected();
+                    SLMesh* mesh    = selNode->mesh();
+                    SLint   bsCount = mesh->bsCount;
 
+                    for (int i = 0; i < bsCount; i++)
+                    {
+                        float scale = mesh->bsTime[i];
+                        ImGui::PushID(i);
+                        ImGui::LabelText("", "Value");
+                        ImGui::SameLine();
+                        ImGui::SliderFloat("", &scale, 0.0f, 1.0f, "%0.01f", ImGuiSliderFlags_NoRoundToFormat);
+                        ImGui::PopID();
+
+                        if (scale != mesh->bsTime[i])
+                            {
+                            mesh->bsTime[i] = scale;
+                            mesh->transformSkinWithBlendShapes(i);
+                            }
+                    }
                 }
                 else
                 {
