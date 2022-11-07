@@ -737,8 +737,8 @@ void SLMesh::generateVAO(SLGLVertexArray& vao)
     }
 
     vao.generate((SLuint)P.size(),
-                 !Ji.empty() ? BU_stream : BU_static,
-                 Ji.empty());
+                 (!Ji.empty() || bsCount > 0) ? BU_stream : BU_static,
+                 Ji.empty() && bsCount == 0);
 }
 //-----------------------------------------------------------------------------
 //! computes the hard edges and stores the vertex indexes separately
@@ -1563,13 +1563,13 @@ void SLMesh::transformSkin(const std::function<void(SLMesh*)>& cbInformNodes)
     }
 }
 //-----------------------------------------------------------------------------
-void SLMesh::transformSkinWithBlendShapes( SLint bsID)
+void SLMesh::transformSkinWithBlendShapes(SLint bsID)
 {
     if (skinnedP.empty())
     {
         skinnedP.resize(P.size());
-        for (SLulong i = 0; i < P.size(); ++i)
-            skinnedP[i] = P[i];
+        // for (SLulong i = 0; i < P.size(); ++i)
+        //     skinnedP[i] = P[i];
     }
 
     // notify Parent Nodes to update AABB
@@ -1580,28 +1580,20 @@ void SLMesh::transformSkinWithBlendShapes( SLint bsID)
 
     _accelStructIsOutOfDate = true;
 
-    // for (SLint i = 0; i < BS[bsID].size(); i++)
-    // {
-    //     SLVec3f dir = (BS[bsID][i] - P[i]) * bsTime[bsID];
-    //     // skinnedP[i] = SLVec3f::ZERO;
-    //     skinnedP[i] += dir + P[i];
-    // }
-
     for (SLint i = 0; i < BS[0].size(); i++)
     {
         skinnedP[i] = P[i];
         for (SLint j = 0; j < bsCount; j++)
         {
             SLVec3f dir = (BS[j][i] - P[i]) * bsTime[j];
-            // skinnedP[i] = SLVec3f::ZERO;
             skinnedP[i] += dir;
         }
     }
 
-    // if (_vao.vaoID())
-    // {
-    //     _vao.updateAttrib(AT_position, _finalP);
-    // }
+    if (_vao.vaoID())
+    {
+        _vao.updateAttrib(AT_position, _finalP);
+    }
 }
 //-----------------------------------------------------------------------------
 #ifdef SL_HAS_OPTIX
