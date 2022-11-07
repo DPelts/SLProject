@@ -152,6 +152,7 @@ public:
     virtual void generateVAO(SLGLVertexArray& vao);
     void         computeHardEdgesIndices(float angleRAD, float epsilon);
     void         transformSkin(const std::function<void(SLMesh*)>& cbInformNodes);
+    void         transformSkinWithBlendShapes(const std::function<void(SLMesh*)>& cbInformNodes);
     void         deselectPartialSelection();
 
 #ifdef SL_HAS_OPTIX
@@ -200,6 +201,7 @@ public:
     SLVVfloat Jw;       //!< 2D Vector of per vertex joint weights (opt.)  layout (location = 7)
     SLVVec3f  skinnedP; //!< temp. vector for CPU skinned vertex positions
     SLVVec3f  skinnedN; //!< temp. vector for CPU skinned vertex normals
+    SLVVec3f  BS[52];
 
     // vertex indices
     SLVushort I16;  //!< Vector of vertex indices 16 bit

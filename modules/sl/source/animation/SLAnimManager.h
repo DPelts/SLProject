@@ -14,6 +14,7 @@
 #include <SLAnimPlayback.h>
 #include <SLAnimation.h>
 #include <SLAnimSkeleton.h>
+#include <SLAnimBlendShape.h>
 
 //-----------------------------------------------------------------------------
 //! SLAnimManager is the central class for all animation handling.
@@ -31,6 +32,7 @@ public:
     ~SLAnimManager();
 
     void            addSkeleton(SLAnimSkeleton* skel);
+    void            addBlendShape(SLAnimBlendShape* blendShape);
     void            addNodeAnimation(SLAnimation* anim);
     SLbool          hasNodeAnimations() { return (_nodeAnimations.size() > 0); }
     SLAnimPlayback* nodeAnimPlayback(const SLstring& name);
@@ -64,6 +66,7 @@ private:
     SLMAnimPlayback _nodeAnimPlaybacks; //!< node animation playbacks
     SLVstring       _allAnimNames;      //!< vector with all animation names
     SLVAnimPlayback _allAnimPlaybacks;  //!< vector with all animation playbacks
+    SLVAnimBlendShape _blendShapeCollection;
 };
 //-----------------------------------------------------------------------------
 #endif

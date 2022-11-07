@@ -319,6 +319,7 @@ SLNode* SLAssimpImporter::load(SLAnimManager&     aniMan,                 //!< R
 
     // load skeleton
     loadSkeleton(aniMan, nullptr, _skeletonRoot);
+    loadBlendShapes(aniMan, scene);
 
     // load materials
     SLstring    modelPath = Utils::getPath(pathAndFile);
@@ -342,6 +343,7 @@ SLNode* SLAssimpImporter::load(SLAnimManager&     aniMan,                 //!< R
     for (SLint i = 0; i < (SLint)scene->mNumMeshes; i++)
     {
         SLMesh* mesh = loadMesh(assetMgr, scene->mMeshes[i]);
+        // Load BlendShapes
         if (mesh != nullptr)
         {
             if (overrideMat)
@@ -663,6 +665,55 @@ void SLAssimpImporter::loadSkeleton(SLAnimManager& animManager, SLJoint* parent,
     for (SLuint i = 0; i < node->mNumChildren; i++)
         loadSkeleton(animManager, joint, node->mChildren[i]);
 }
+
+void SLAssimpImporter::loadBlendShapes(SLAnimManager& aniMan, const aiScene* scene)
+{
+    SLint                    meshCount = scene->mNumMeshes;
+    SLint totalMeshWithBlendShapes = 0;
+
+    for (int i = 0; i < meshCount; i++)
+    {
+        if (scene->mMeshes[i]->mNumAnimMeshes == 0)
+            continue;
+
+        ++totalMeshWithBlendShapes;
+
+        SLint animMeshCount = scene->mMeshes[i]->mNumAnimMeshes;
+        // animBSManager.addMeshName(scene->mMeshes[i]->mName.data);
+
+        for (int j = 0; j < animMeshCount; j++)
+        { 
+            aiAnimMesh* aiAM = scene->mMeshes[i]->mAnimMeshes[j];
+            SLint             vertexCount = aiAM->mNumVertices;
+            SLAnimBlendShape* blendShape = new SLAnimBlendShape(vertexCount);
+            blendShape->addName(aiAM->mName.data);
+            // animBSManager.addBlendShapeName(aiAM->mName.data);
+
+            for (int k = 0; k < vertexCount; k++)
+            {
+                SLVec3f vertex = {
+                  aiAM->mVertices[k].x,
+                  aiAM->mVertices[k].y,
+                  aiAM->mVertices[k].z,
+                };
+
+                blendShape->addVertex(vertex);
+
+                // SLVec3f normal = {
+                //   aiAM->mNormals[k].x,
+                //   aiAM->mNormals[k].y,
+                //   aiAM->mNormals[k].z,
+                // };
+                // blendShape->addNormal(normal);
+            }
+
+            aniMan.addBlendShape(blendShape);
+        }
+    }
+
+    // animBSManager.setTotalMeshCount(totalMeshWithBlendShapes);
+}
+
 //-----------------------------------------------------------------------------
 /*!
 SLAssimpImporter::loadMaterial loads the AssImp aiMat an returns the SLMaterial.
@@ -1019,6 +1070,26 @@ SLMesh* SLAssimpImporter::loadMesh(SLAssetManager* am, aiMesh* mesh)
     {
         m->UV[1].clear();
         m->UV[1].resize(m->P.size());
+    }
+
+    // BlendShape allocation and set
+    {
+        int blendShapeCount = mesh->mNumAnimMeshes;
+        if (blendShapeCount > 0)
+        {
+            int blendShapeLength = mesh->mAnimMeshes[0]->mNumVertices;
+            for (int i = 0; i < blendShapeCount; i++)
+            {
+                m->BS[i].clear();
+                m->BS[i].resize(blendShapeLength);
+
+                for (int j = 0; j < blendShapeLength; j++)
+                {
+                    SLVec3f vertex = SLVec3f(mesh->mAnimMeshes[i]->mVertices[j].x, mesh->mAnimMeshes[i]->mVertices[j].y, mesh->mAnimMeshes[i]->mVertices[j].z);
+                    m->BS[i].push_back(vertex);
+                }
+            }
+        }
     }
 
     // copy vertex positions & tex. coord.

@@ -74,6 +74,10 @@ file(GLOB sources
         source/accelstruct/SLCompactGrid.h
         source/animation/SLAnimKeyframe.cpp
         source/animation/SLAnimKeyframe.h
+        source/animation/SLAnimBlendShape.h
+        source/animation/SLAnimBlendShape.cpp
+        source/animation/SLAnimBlendShapeManager.h
+        source/animation/SLAnimBlendShapeManager.cpp
         source/animation/SLAnimManager.cpp
         source/animation/SLAnimManager.h
         source/animation/SLAnimPlayback.cpp

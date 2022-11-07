@@ -42,6 +42,12 @@ void SLAnimManager::addSkeleton(SLAnimSkeleton* skel)
     _skeletons.push_back(skel);
 }
 //-----------------------------------------------------------------------------
+//! Add a blendshape to the blendshapecollection vector
+void SLAnimManager::addBlendShape(SLAnimBlendShape* blendShape)
+{
+    _blendShapeCollection.push_back(blendShape);
+}
+//-----------------------------------------------------------------------------
 /*! Creates a new node animation
     @param  duration    length of the animation
 */

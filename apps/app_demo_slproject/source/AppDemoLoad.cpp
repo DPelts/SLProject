@@ -6252,24 +6252,38 @@ resolution shadows near the camera and lower resolution shadows further away.");
 
     else if (sceneID == SID_FacialAnimation)
     {
-
-
         s->name("Facial Animation");
-        s->info("Detects facial landmarks and morphs them onto Sintel");
+        s->info("Detects facial landmarks and morphs them onto an avatar");
         SLNode* scene = new SLNode("Scene Node");
         s->root3D(scene);
         SLCamera* cam = new SLCamera("Camera");
-        cam->translation(0.0f, 1.0f, 0.0f);
+        cam->translation(0.0f, 0.0f, 1.0f);
         cam->lookAt(0.0f, 0.0f, 0.0f);
         cam->focalDist(1.0f);
         cam->setInitialState();
         scene->addChild(cam);
         sv->camera(cam);
     
+        // light
+        SLLightSpot* light1 = new SLLightSpot(am, s, 10, 10, 5, 0.5f);
+        light1->powers(0.2f, 1.0f, 1.0f);
+        light1->attenuation(1, 0, 0);
+        scene->addChild(light1);
 
+        SLMaterial* m2   = new SLMaterial(am, "m2", SLCol4f::WHITE);
+        SLGrid*     grid = new SLGrid(am, SLVec3f(-5, 0, -5), SLVec3f(5, 0, 5), 20, 20, "Grid", m2);
+        scene->addChild(new SLNode(grid, "grid"));
 
-        sv->sceneViewCamera()->background().colors(SLCol4f(0.8f, 0.8f, 0.8f),
-                                                   SLCol4f(0.2f, 0.2f, 0.2f));
+        SLAssimpImporter importer;
+        // SLNode*          faceAvatar = importer.load(s->animManager(), am, modelPath + "GLTF/Face/face_with_shape_key.gltf", texPath);
+        SLNode*          faceAvatar = importer.load(s->animManager(), am, modelPath + "GLTF/Face/cube_with_shape_key.gltf", texPath);
+        // SLNode* faceAvatar = importer.load(s->animManager(), am, modelPath + "FBX/Face/POLYWINK_AIX_SAMPLE.fbx", texPath);
+        // SLNode* faceAvatar = importer.load(s->animManager(), am, modelPath + "FBX/Face/cube.fbx", texPath);
+        // SLNode*          faceAvatar = importer.load(s->animManager(), am, modelPath + "GLTF/Face/test.gltf", texPath);
+        faceAvatar->translate(0.0f, 0.0f, 0.0f);
+        scene->addChild(faceAvatar);
+
+        sv->sceneViewCamera()->background().colors(SLCol4f(0.0f, 0.0f, 0.0f), SLCol4f(0.0f, 0.0f, 0.0f));
     }
 
     else if (sceneID == SID_Benchmark1_LargeModel) //..............................................

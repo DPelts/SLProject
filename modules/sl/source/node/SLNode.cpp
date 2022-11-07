@@ -1120,6 +1120,8 @@ bool SLNode::updateMeshSkins(const std::function<void(SLMesh*)>& cbInformNodes)
     for (auto* child : _children)
         hasChanges |= child->updateMeshSkins(cbInformNodes);
 
+     // if (_mesh && _mesh->)
+
     return hasChanges;
 }
 //-----------------------------------------------------------------------------

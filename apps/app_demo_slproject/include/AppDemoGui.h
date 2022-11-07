@@ -66,6 +66,7 @@ public:
     static SLbool      showStatsWAI;        //!< Flag if WAI info should be shown
     static SLbool      showImGuiMetrics;    //!< Flag if imgui metrics infor should be shown
     static SLbool      showInfosSensors;    //!< Flag if device sensors info should be shown
+    static SLbool      showBlendShapeRegulator;
     static SLbool      showInfosDevice;     //!< Flag if device info should be shown
     static SLbool      showInfosScene;      //!< Flag if scene info should be shown
     static SLbool      showSceneGraph;      //!< Flag if scene graph should be shown

@@ -24,6 +24,7 @@ struct aiMesh;
 
 class SLAssetManager;
 class SLAnimManager;
+class SLAnimBlendShapeManager;
 class SLProgressHandler;
 class SLSkybox;
 
@@ -114,6 +115,8 @@ protected:
     void                loadSkeleton(SLAnimManager& animManager,
                                      SLJoint*       parent,
                                      aiNode*        node);
+    void                loadBlendShapes(SLAnimManager& aniMan,
+                                        const aiScene*           scene);
     static SLMaterial*  loadMaterial(SLAssetManager* am,
                                      SLint           index,
                                      aiMaterial*     aiMat,

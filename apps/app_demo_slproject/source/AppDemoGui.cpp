@@ -110,7 +110,8 @@ SLbool      AppDemoGui::showStatsWAI        = false;
 SLbool      AppDemoGui::showImGuiMetrics    = false;
 SLbool      AppDemoGui::showInfosScene      = false;
 SLbool      AppDemoGui::showInfosSensors    = false;
-SLbool      AppDemoGui::showInfosDevice     = false;
+SLbool      AppDemoGui::showBlendShapeRegulator = false;
+  SLbool      AppDemoGui::showInfosDevice     = false;
 SLbool      AppDemoGui::showSceneGraph      = false;
 SLbool      AppDemoGui::showProperties      = false;
 SLbool      AppDemoGui::showErlebAR         = false;
@@ -955,6 +956,30 @@ void AppDemoGui::build(SLScene* s, SLSceneView* sv)
                     if (transformNode)
                         removeTransformNode(s);
                 }
+                ImGui::End();
+                ImGui::PopFont();
+            }
+
+            // TODO: GUI for BlendShapes Range(0, 1)
+            if (showBlendShapeRegulator)
+            {
+                ImGuiWindowFlags window_flags = 0;
+                window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
+                ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[1]);
+                ImGui::Begin("Transform Selected Node", &showTransform, window_flags);
+                if (s->singleNodeSelected())
+                {
+
+                }
+                else
+                {
+                    ImGui::Text("No node selected.");
+                    ImGui::Text("Please select a node by double clicking it.");
+
+                    if (transformNode)
+                        removeTransformNode(s);
+                }
+
                 ImGui::End();
                 ImGui::PopFont();
             }
@@ -2983,6 +3008,7 @@ void AppDemoGui::buildMenuBar(SLScene* s, SLSceneView* sv)
             ImGui::MenuItem("Scenegraph", nullptr, &showSceneGraph);
             ImGui::MenuItem("Properties", nullptr, &showProperties);
             ImGui::MenuItem("Transform", nullptr, &showTransform);
+            ImGui::MenuItem("BlendShapes Regulator", nullptr, &showBlendShapeRegulator);
             if (AppDemo::devLoc.originLatLonAlt() != SLVec3d::ZERO ||
                 AppDemo::devLoc.defaultLatLonAlt() != SLVec3d::ZERO)
                 ImGui::MenuItem("Date-Time", nullptr, &showDateAndTime);
