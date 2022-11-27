@@ -445,6 +445,49 @@ elseif("${SYSTEM_NAME_UPPER}" STREQUAL "WINDOWS") #-----------------------------
         file(COPY ${glfw_LINK_DIR}/glfw3.dll DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
     endif()
 
+	#######################
+    # Mediapipe for windows#
+    #######################
+	set(mediapipe_VERSION "1.0.0")
+    set(mediapipe_DIR ${PREBUILT_PATH}/win64_mediapipe)
+	
+	set(mediapipe_INCLUDE_DIR  ${mediapipe_DIR}/include)
+    set(mediapipe_LINK_DIR ${mediapipe_DIR}/lib) # don't forget to add the this link dir down at the bottom
+
+    add_library(face_mesh SHARED IMPORTED)
+    set_target_properties(face_mesh PROPERTIES
+            IMPORTED_IMPLIB "${mediapipe_LINK_DIR}/face_mesh.lib"
+            IMPORTED_LOCATION "${mediapipe_LINK_DIR}/face_mesh.dll"
+            INTERFACE_INCLUDE_DIRECTORIES "${mediapipe_INCLUDE_DIR}"
+            )
+
+    set(mediapipe_LIBS face_mesh)
+
+    # Set working dir for VS
+    set(DEFAULT_PROJECT_OPTIONS ${DEFAULT_PROJECT_OPTIONS}
+            VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
+    # For MSVC copy them to working dir
+    file(COPY ${mediapipe_LINK_DIR}/face_mesh.dll DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+	file(COPY ${mediapipe_LINK_DIR}/data DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+	file(COPY ${mediapipe_LINK_DIR}/graphs DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+	file(COPY ${mediapipe_LINK_DIR}/modules DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+	file(COPY ${mediapipe_LINK_DIR}/subgraphs DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+	file(COPY ${mediapipe_LINK_DIR}/face_mesh.exp DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+	file(COPY ${mediapipe_LINK_DIR}/face_mesh.lib DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+	file(COPY ${mediapipe_LINK_DIR}/face_mesh.pdb DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+	file(COPY ${mediapipe_LINK_DIR}/opencv_world410.dll DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+	
+	file(COPY ${mediapipe_LINK_DIR}/face_mesh.dll DESTINATION ${CMAKE_BINARY_DIR}/Release)
+	file(COPY ${mediapipe_LINK_DIR}/data DESTINATION ${CMAKE_BINARY_DIR}/Release)
+	file(COPY ${mediapipe_LINK_DIR}/graphs DESTINATION ${CMAKE_BINARY_DIR}/Release)
+	file(COPY ${mediapipe_LINK_DIR}/modules DESTINATION ${CMAKE_BINARY_DIR}/Release)
+	file(COPY ${mediapipe_LINK_DIR}/subgraphs DESTINATION ${CMAKE_BINARY_DIR}/Release)
+	file(COPY ${mediapipe_LINK_DIR}/face_mesh.exp DESTINATION ${CMAKE_BINARY_DIR}/Release)
+	file(COPY ${mediapipe_LINK_DIR}/face_mesh.lib DESTINATION ${CMAKE_BINARY_DIR}/Release)
+	file(COPY ${mediapipe_LINK_DIR}/face_mesh.pdb DESTINATION ${CMAKE_BINARY_DIR}/Release)
+	file(COPY ${mediapipe_LINK_DIR}/opencv_world410.dll DESTINATION ${CMAKE_BINARY_DIR}/Release)
+
     #######################
     # ktx for windows     #
     #######################

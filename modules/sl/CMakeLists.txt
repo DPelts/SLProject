@@ -188,6 +188,8 @@ file(GLOB sources
         source/mesh/SLCylinder.h
         source/mesh/SLDisk.cpp
         source/mesh/SLDisk.h
+		source/mesh/SLFaceAnim.h
+		source/mesh/SLFaceAnim.cpp
         source/mesh/SLGrid.cpp
         source/mesh/SLGrid.h
         source/mesh/SLLens.cpp

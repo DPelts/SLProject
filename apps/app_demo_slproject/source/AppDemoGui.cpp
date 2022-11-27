@@ -1912,6 +1912,8 @@ void AppDemoGui::buildMenuBar(SLScene* s, SLSceneView* sv)
 
                 if (ImGui::BeginMenu("Facial Animation"))
                 {
+                    if (ImGui::MenuItem("Slider", nullptr, sid == SID_FacialAnimationSlider))
+                        s->onLoad(am, s, sv, SID_FacialAnimationSlider);
                     if (ImGui::MenuItem("Main", nullptr, sid == SID_FacialAnimation))
                         s->onLoad(am, s, sv, SID_FacialAnimation);
 

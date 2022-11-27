@@ -189,6 +189,7 @@ enum SLSceneID
     SID_ParticleSystem_RingOfFire,
     SID_ParticleSystem_FireComplex,
 
+    SID_FacialAnimationSlider,
     SID_FacialAnimation,
 
     SID_Benchmark1_LargeModel,
