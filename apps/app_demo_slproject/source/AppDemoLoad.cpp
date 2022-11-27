@@ -6275,8 +6275,8 @@ resolution shadows near the camera and lower resolution shadows further away.");
         scene->addChild(new SLNode(grid, "grid"));
 
         SLAssimpImporter importer;
-        // SLNode*          faceAvatar = importer.load(s->animManager(), am, modelPath + "GLTF/Face/face_with_shape_key.gltf", texPath);
-        SLNode*          faceAvatar = importer.load(s->animManager(), am, modelPath + "GLTF/Face/cube_with_shape_key.gltf", texPath);
+         SLNode*          faceAvatar = importer.load(s->animManager(), am, modelPath + "GLTF/Face/face_with_shape_key.gltf", texPath);
+        // SLNode*          faceAvatar = importer.load(s->animManager(), am, modelPath + "GLTF/Face/cube_with_shape_key.gltf", texPath);
         // SLNode* faceAvatar = importer.load(s->animManager(), am, modelPath + "FBX/Face/POLYWINK_AIX_SAMPLE.fbx", texPath);
         // SLNode* faceAvatar = importer.load(s->animManager(), am, modelPath + "FBX/Face/cube.fbx", texPath);
         // SLNode*          faceAvatar = importer.load(s->animManager(), am, modelPath + "GLTF/Face/test.gltf", texPath);

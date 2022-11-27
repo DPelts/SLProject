@@ -185,6 +185,63 @@ After calibration the yellow wireframe cube should stick on the chessboard. Plea
 //-----------------------------------------------------------------------------
 off64_t ftpXferSizeMax = 0;
 
+
+
+const char* blendshapeList[] = {"eyeBlinkLeft",
+                            "eyeLookDownLeft",
+                            "eyeLookInLeft",
+                            "eyeLookOutLeft",
+                            "eyeLookUpLeft",
+                            "eyeSquintLeft",
+                            "eyeWideLeft",
+                            "eyeBlinkRight",
+                            "eyeLookDownRight",
+                            "eyeLookInRight",
+                            "eyeLookOutRight",
+                            "eyeLookUpRight",
+                            "eyeSquintRight",
+                            "eyeWideRight",
+                            "jawForward",
+                            "jawLeft",
+                            "jawRight",
+                            "jawOpen",
+                            "mouthClose",
+                            "mouthFunnel",
+                            "mouthPucker",
+                            "mouthRight",
+                            "mouthLeft",
+                            "mouthSmileLeft",
+                            "mouthSmileRight",
+                            "mouthFrownRight",
+                            "mouthFrownLeft",
+                            "mouthDimpleLeft",
+                            "mouthDimpleRight",
+                            "mouthStretchLeft",
+                            "mouthStretchRight",
+                            "mouthRollLower",
+                            "mouthRollUpper",
+                            "mouthShrugLower",
+                            "mouthShrugUpper",
+                            "mouthPressLeft",
+                            "mouthPressRight",
+                            "mouthLowerDownLeft",
+                            "mouthLowerDownRight",
+                            "mouthUpperUpLeft",
+                            "mouthUpperUpRight",
+                            "browDownLeft",
+                            "browDownRight",
+                            "browInnerUp",
+                            "browOuterUpLeft",
+                            "browOuterUpRight",
+                            "cheekPuff",
+                            "cheekSquintLeft",
+                            "cheekSquintRight",
+                            "noseSneerLeft",
+                            "noseSneerRight",
+                            "tongueOut"};
+
+
+
 //-----------------------------------------------------------------------------
 // Callback routine for FTP file transfer to progress the progressbar
 int ftpCallbackXfer(off64_t xfered, void* arg)
@@ -984,8 +1041,8 @@ void AppDemoGui::build(SLScene* s, SLSceneView* sv)
 
                         if (scale != mesh->bsTime[i])
                             {
-                            mesh->bsTime[i] = scale;
-                            mesh->transformSkinWithBlendShapes(i);
+                                mesh->bsTime[i] = scale;
+                                mesh->transformSkinWithBlendShapes(i);
                             }
                     }
                 }
