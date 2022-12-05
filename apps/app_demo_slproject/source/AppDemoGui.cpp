@@ -27,6 +27,7 @@
 #include <SLShadowMap.h>
 #include <SLMaterial.h>
 #include <SLMesh.h>
+#include <SLFaceAnim.h>
 #include <SLParticleSystem.h>
 #include <SLNode.h>
 #include <SLScene.h>
@@ -111,6 +112,7 @@ SLbool      AppDemoGui::showImGuiMetrics    = false;
 SLbool      AppDemoGui::showInfosScene      = false;
 SLbool      AppDemoGui::showInfosSensors    = false;
 SLbool      AppDemoGui::showBlendShapeRegulator = false;
+SLbool      AppDemoGui::showCaptureFace = false;
   SLbool      AppDemoGui::showInfosDevice     = false;
 SLbool      AppDemoGui::showSceneGraph      = false;
 SLbool      AppDemoGui::showProperties      = false;
@@ -184,62 +186,6 @@ After calibration the yellow wireframe cube should stick on the chessboard. Plea
 
 //-----------------------------------------------------------------------------
 off64_t ftpXferSizeMax = 0;
-
-
-
-const char* blendshapeList[] = {"eyeBlinkLeft",
-                            "eyeLookDownLeft",
-                            "eyeLookInLeft",
-                            "eyeLookOutLeft",
-                            "eyeLookUpLeft",
-                            "eyeSquintLeft",
-                            "eyeWideLeft",
-                            "eyeBlinkRight",
-                            "eyeLookDownRight",
-                            "eyeLookInRight",
-                            "eyeLookOutRight",
-                            "eyeLookUpRight",
-                            "eyeSquintRight",
-                            "eyeWideRight",
-                            "jawForward",
-                            "jawLeft",
-                            "jawRight",
-                            "jawOpen",
-                            "mouthClose",
-                            "mouthFunnel",
-                            "mouthPucker",
-                            "mouthRight",
-                            "mouthLeft",
-                            "mouthSmileLeft",
-                            "mouthSmileRight",
-                            "mouthFrownRight",
-                            "mouthFrownLeft",
-                            "mouthDimpleLeft",
-                            "mouthDimpleRight",
-                            "mouthStretchLeft",
-                            "mouthStretchRight",
-                            "mouthRollLower",
-                            "mouthRollUpper",
-                            "mouthShrugLower",
-                            "mouthShrugUpper",
-                            "mouthPressLeft",
-                            "mouthPressRight",
-                            "mouthLowerDownLeft",
-                            "mouthLowerDownRight",
-                            "mouthUpperUpLeft",
-                            "mouthUpperUpRight",
-                            "browDownLeft",
-                            "browDownRight",
-                            "browInnerUp",
-                            "browOuterUpLeft",
-                            "browOuterUpRight",
-                            "cheekPuff",
-                            "cheekSquintLeft",
-                            "cheekSquintRight",
-                            "noseSneerLeft",
-                            "noseSneerRight",
-                            "tongueOut"};
-
 
 
 //-----------------------------------------------------------------------------
@@ -1017,7 +963,6 @@ void AppDemoGui::build(SLScene* s, SLSceneView* sv)
                 ImGui::PopFont();
             }
 
-            // TODO: GUI for BlendShapes Range(0, 1)
             if (showBlendShapeRegulator)
             {
                 ImGuiWindowFlags window_flags = 0;
@@ -1045,6 +990,35 @@ void AppDemoGui::build(SLScene* s, SLSceneView* sv)
                                 mesh->transformSkinWithBlendShapes(i);
                             }
                     }
+                }
+                else
+                {
+                    ImGui::Text("No node selected.");
+                    ImGui::Text("Please select a node by double clicking it.");
+
+                    if (transformNode)
+                        removeTransformNode(s);
+                }
+
+                ImGui::End();
+                ImGui::PopFont();
+            }
+
+            if (showCaptureFace)
+            {
+                ImGuiWindowFlags window_flags = 0;
+                window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
+                ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[1]);
+                ImGui::Begin("Capture Face", &showCaptureFace, window_flags);
+                if (s->singleNodeSelected())
+                {
+                    SLNode* selNode = s->singleNodeSelected();
+                    SLMesh* mesh    = selNode->mesh();
+
+                    if (ImGui::Button("Start"))
+                        if (dynamic_cast<SLFaceMesh*>(mesh) != nullptr)
+                            dynamic_cast<SLFaceMesh*>(mesh)->startCapture();
+
                 }
                 else
                 {
@@ -3086,6 +3060,7 @@ void AppDemoGui::buildMenuBar(SLScene* s, SLSceneView* sv)
             ImGui::MenuItem("Properties", nullptr, &showProperties);
             ImGui::MenuItem("Transform", nullptr, &showTransform);
             ImGui::MenuItem("BlendShapes Regulator", nullptr, &showBlendShapeRegulator);
+            ImGui::MenuItem("Capture Face", nullptr, &showCaptureFace);
             if (AppDemo::devLoc.originLatLonAlt() != SLVec3d::ZERO ||
                 AppDemo::devLoc.defaultLatLonAlt() != SLVec3d::ZERO)
                 ImGui::MenuItem("Date-Time", nullptr, &showDateAndTime);

@@ -22,6 +22,7 @@
 #    include <SLAnimManager.h>
 #    include <Profiler.h>
 #    include <SLAssimpProgressHandler.h>
+#include <SLFaceAnim.h>
 
 // assimp is only included in the source file to not expose it to the rest of the framework
 #    include <assimp/Importer.hpp>
@@ -280,7 +281,8 @@ SLNode* SLAssimpImporter::load(SLAnimManager&     aniMan,                 //!< R
                                float              ambientFactor,          //!< if ambientFactor > 0 ambient = diffuse * AmbientFactor
                                SLbool             forceCookTorranceRM,    //!< Forces Cook-Torrance reflection model
                                SLProgressHandler* progressHandler,        //!< Pointer to progress handler
-                               SLuint             flags                   //!< Import flags (see postprocess.h)
+                               SLuint             flags,                  //!< Import flags (see postprocess.h)
+                               SLbool             isFaceAnim
 )
 {
     PROFILE_FUNCTION();
@@ -342,8 +344,12 @@ SLNode* SLAssimpImporter::load(SLAnimManager&     aniMan,                 //!< R
     std::map<int, SLMesh*> meshMap; // map from the ai index to our mesh
     for (SLint i = 0; i < (SLint)scene->mNumMeshes; i++)
     {
-        SLMesh* mesh = loadMesh(assetMgr, scene->mMeshes[i]);
-        // Load BlendShapes
+        SLMesh* mesh;
+        if (isFaceAnim) 
+            mesh = loadFaceMesh(assetMgr, scene->mMeshes[i]);
+        else
+            SLMesh* mesh = loadMesh(assetMgr, scene->mMeshes[i]);
+
         if (mesh != nullptr)
         {
             if (overrideMat)
@@ -1090,6 +1096,277 @@ SLMesh* SLAssimpImporter::loadMesh(SLAssetManager* am, aiMesh* mesh)
                 {
                     SLVec3f vertex = SLVec3f(mesh->mAnimMeshes[i]->mVertices[j].x, mesh->mAnimMeshes[i]->mVertices[j].y, mesh->mAnimMeshes[i]->mVertices[j].z);
                     m->BS[i][j] = vertex;
+                }
+            }
+        }
+    }
+
+    // copy vertex positions & tex. coord.
+    for (SLuint i = 0; i < m->P.size(); ++i)
+    {
+        m->P[i].set(mesh->mVertices[i].x,
+                    mesh->mVertices[i].y,
+                    mesh->mVertices[i].z);
+        if (!m->N.empty())
+            m->N[i].set(mesh->mNormals[i].x,
+                        mesh->mNormals[i].y,
+                        mesh->mNormals[i].z);
+        if (!m->UV[0].empty())
+            m->UV[0][i].set(mesh->mTextureCoords[0][i].x,
+                            mesh->mTextureCoords[0][i].y);
+        if (!m->UV[1].empty())
+            m->UV[1][i].set(mesh->mTextureCoords[1][i].x,
+                            mesh->mTextureCoords[1][i].y);
+    }
+
+    // create primitive index vector
+    SLuint j = 0;
+    if (m->P.size() < 65536)
+    {
+        m->I16.clear();
+        if (numTriangles)
+        {
+            m->I16.resize(numTriangles * 3);
+            for (SLuint i = 0; i < mesh->mNumFaces; ++i)
+            {
+                if (mesh->mFaces[i].mNumIndices == 3)
+                {
+                    m->I16[j++] = (SLushort)mesh->mFaces[i].mIndices[0];
+                    m->I16[j++] = (SLushort)mesh->mFaces[i].mIndices[1];
+                    m->I16[j++] = (SLushort)mesh->mFaces[i].mIndices[2];
+                }
+            }
+        }
+        else if (numLines)
+        {
+            m->I16.resize(numLines * 2);
+            for (SLuint i = 0; i < mesh->mNumFaces; ++i)
+            {
+                if (mesh->mFaces[i].mNumIndices == 2)
+                {
+                    m->I16[j++] = (SLushort)mesh->mFaces[i].mIndices[0];
+                    m->I16[j++] = (SLushort)mesh->mFaces[i].mIndices[1];
+                }
+            }
+        }
+        else if (numPoints)
+        {
+            m->I16.resize(numPoints);
+            for (SLuint i = 0; i < mesh->mNumFaces; ++i)
+            {
+                if (mesh->mFaces[i].mNumIndices == 1)
+                    m->I16[j++] = (SLushort)mesh->mFaces[i].mIndices[0];
+            }
+        }
+
+        // check for invalid indices
+        for (auto i : m->I16)
+            assert(i < m->P.size() && "SLAssimpImporter::loadMesh: Invalid Index");
+    }
+    else
+    {
+        m->I32.clear();
+        if (numTriangles)
+        {
+            m->I32.resize(numTriangles * 3);
+            for (SLuint i = 0; i < mesh->mNumFaces; ++i)
+            {
+                if (mesh->mFaces[i].mNumIndices == 3)
+                {
+                    m->I32[j++] = mesh->mFaces[i].mIndices[0];
+                    m->I32[j++] = mesh->mFaces[i].mIndices[1];
+                    m->I32[j++] = mesh->mFaces[i].mIndices[2];
+                }
+            }
+        }
+        else if (numLines)
+        {
+            m->I32.resize(numLines * 2);
+            for (SLuint i = 0; i < mesh->mNumFaces; ++i)
+            {
+                if (mesh->mFaces[i].mNumIndices == 2)
+                {
+                    m->I32[j++] = mesh->mFaces[i].mIndices[0];
+                    m->I32[j++] = mesh->mFaces[i].mIndices[1];
+                }
+            }
+        }
+        else if (numPoints)
+        {
+            m->I32.resize(numPoints * 1);
+            for (SLuint i = 0; i < mesh->mNumFaces; ++i)
+            {
+                if (mesh->mFaces[i].mNumIndices == 1)
+                    m->I32[j++] = mesh->mFaces[i].mIndices[0];
+            }
+        }
+
+        // check for invalid indices
+        for (auto i : m->I32)
+            assert(i < m->P.size() && "SLAssimpImporter::loadMesh: Invalid Index");
+    }
+
+    if (!mesh->HasNormals() && numTriangles)
+        m->calcNormals();
+
+    // load joints
+    if (mesh->HasBones())
+    {
+        _skinnedMeshes.push_back(m);
+        m->skeleton(_skeleton);
+
+        m->Ji.resize(m->P.size());
+        m->Jw.resize(m->P.size());
+
+        for (SLuint i = 0; i < mesh->mNumBones; i++)
+        {
+            aiBone*  joint   = mesh->mBones[i];
+            SLJoint* slJoint = _skeleton->getJoint(joint->mName.C_Str());
+
+            // @todo On OSX it happens from time to time that slJoint is nullptr
+            if (slJoint)
+            {
+                for (SLuint nW = 0; nW < joint->mNumWeights; nW++)
+                {
+                    // add the weight
+                    SLuint  vertId = joint->mWeights[nW].mVertexId;
+                    SLfloat weight = joint->mWeights[nW].mWeight;
+
+                    m->Ji[vertId].push_back((SLuchar)slJoint->id());
+                    m->Jw[vertId].push_back(weight);
+
+                    // check if the bones max radius changed
+                    // @todo this is very specific to this loaded mesh,
+                    //       when we add a skeleton instances class this radius
+                    //       calculation has to be done on the instance!
+                    slJoint->calcMaxRadius(SLVec3f(mesh->mVertices[vertId].x,
+                                                   mesh->mVertices[vertId].y,
+                                                   mesh->mVertices[vertId].z));
+                }
+            }
+            else
+            {
+                SL_LOG("Failed to load joint of skeleton in SLAssimpImporter::loadMesh: %s",
+                       joint->mName.C_Str());
+                // return nullptr;
+            }
+        }
+    }
+
+    return m;
+}
+
+SLFaceMesh* SLAssimpImporter::loadFaceMesh(SLAssetManager* am, aiMesh* mesh)
+{
+    PROFILE_FUNCTION();
+
+    // Count first the NO. of triangles in the mesh
+    SLuint numPoints    = 0;
+    SLuint numLines     = 0;
+    SLuint numTriangles = 0;
+    SLuint numPolygons  = 0;
+
+    for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
+    {
+        if (mesh->mFaces[i].mNumIndices == 1) numPoints++;
+        if (mesh->mFaces[i].mNumIndices == 2) numLines++;
+        if (mesh->mFaces[i].mNumIndices == 3) numTriangles++;
+        if (mesh->mFaces[i].mNumIndices > 3) numPolygons++;
+    }
+
+    // A mesh can contain either point, lines or triangles
+    if ((numTriangles && (numLines || numPoints)) ||
+        (numLines && (numTriangles || numPoints)) ||
+        (numPoints && (numLines || numTriangles)))
+    {
+        // SL_LOG("SLAssimpImporter::loadMesh:  Mesh contains multiple primitive types: %s, Lines: %d, Points: %d",
+        //        mesh->mName.C_Str(),
+        //        numLines,
+        //        numPoints);
+
+        // Prioritize triangles over lines over points
+        if (numTriangles && numLines) numLines = 0;
+        if (numTriangles && numPoints) numPoints = 0;
+        if (numLines && numPoints) numPoints = 0;
+    }
+
+    if (numPolygons > 0)
+    {
+        SL_LOG("SLAssimpImporter::loadMesh:  Mesh contains polygons: %s",
+               mesh->mName.C_Str());
+        return nullptr;
+    }
+
+    // We only load meshes that contain triangles or lines
+    if (mesh->mNumVertices == 0)
+    {
+        SL_LOG("SLAssimpImporter::loadMesh:  Mesh has no vertices: %s",
+               mesh->mName.C_Str());
+        return nullptr;
+    }
+
+    // We only load meshes that contain triangles or lines
+    if (numTriangles == 0 && numLines == 0 && numPoints == 0)
+    {
+        SL_LOG("SLAssimpImporter::loadMesh:  Mesh has has no triangles nor lines nor points: %s",
+               mesh->mName.C_Str());
+        return nullptr;
+    }
+
+    // create a new mesh.
+    // The mesh pointer is added automatically to the SLScene::meshes vector.
+    SLstring name = mesh->mName.data;
+    SLFaceMesh*  m    = new SLFaceMesh(am, name.empty() ? "Imported Mesh" : name);
+
+    // Set primitive type
+    if (numTriangles) m->primitive(SLGLPrimitiveType::PT_triangles);
+    if (numLines) m->primitive(SLGLPrimitiveType::PT_lines);
+    if (numPoints) m->primitive(SLGLPrimitiveType::PT_points);
+
+    // Create position & normal vector
+    m->P.clear();
+    m->P.resize(mesh->mNumVertices);
+
+    // Create normal vector for triangle primitive types
+    if (mesh->HasNormals() && numTriangles)
+    {
+        m->N.clear();
+        m->N.resize(m->P.size());
+    }
+
+    // Allocate 1st tex. coord. vector if needed
+    if (mesh->HasTextureCoords(0) && numTriangles)
+    {
+        m->UV[0].clear();
+        m->UV[0].resize(m->P.size());
+    }
+
+    // Allocate 2nd texture coordinate vector if needed
+    // Some models use multiple textures with different uv's
+    if (mesh->HasTextureCoords(1) && numTriangles)
+    {
+        m->UV[1].clear();
+        m->UV[1].resize(m->P.size());
+    }
+
+    // BlendShape allocation and set
+    {
+        int blendShapeCount = mesh->mNumAnimMeshes;
+        if (blendShapeCount > 0)
+        {
+            int blendShapeLength = mesh->mAnimMeshes[0]->mNumVertices;
+            for (int i = 0; i < blendShapeCount; i++)
+            {
+                m->BS[i].clear();
+                m->BS[i].resize(blendShapeLength);
+                m->bsTime[i]       = 0.0f;
+                m->bsHasChanged[i] = false;
+                m->bsCount++;
+
+                for (int j = 0; j < blendShapeLength; j++)
+                {
+                    SLVec3f vertex = SLVec3f(mesh->mAnimMeshes[i]->mVertices[j].x, mesh->mAnimMeshes[i]->mVertices[j].y, mesh->mAnimMeshes[i]->mVertices[j].z);
+                    m->BS[i][j]    = vertex;
                 }
             }
         }

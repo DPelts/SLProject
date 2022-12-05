@@ -27,6 +27,7 @@ class SLAnimManager;
 class SLAnimBlendShapeManager;
 class SLProgressHandler;
 class SLSkybox;
+class SLFaceMesh;
 
 //-----------------------------------------------------------------------------
 typedef std::map<int, SLMesh*> SLMeshMap;
@@ -62,7 +63,7 @@ public:
                    SLProcess_RemoveRedundantMaterials |
                    SLProcess_FindDegenerates |
                    SLProcess_FindInvalidData |
-                   SLProcess_SplitLargeMeshes
+                   SLProcess_SplitLargeMeshes,
                  //|SLProcess_SortByPType
                  //|SLProcess_OptimizeMeshes
                  //|SLProcess_OptimizeGraph
@@ -83,6 +84,7 @@ public:
                  //|SLProcess_FlipWindingOrder
                  //|SLProcess_SplitByJointCount
                  //|SLProcess_Dejoint
+                 SLbool isFaceMesh = false
     );
 
 protected:
@@ -132,6 +134,7 @@ protected:
                                     SLuint          uvIndex,
                                     SLbool          deleteTexImgAfterBuild = false);
     SLMesh*             loadMesh(SLAssetManager* am, aiMesh* mesh);
+    SLFaceMesh*         loadFaceMesh(SLAssetManager* am, aiMesh* mesh);
     SLNode*             loadNodesRec(SLNode*    curNode,
                                      aiNode*    aiNode,
                                      SLMeshMap& meshes,

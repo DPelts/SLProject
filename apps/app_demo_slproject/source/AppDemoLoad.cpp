@@ -6304,7 +6304,12 @@ resolution shadows near the camera and lower resolution shadows further away.");
         scene->addChild(light1);
 
         SLAssimpImporter importer;
-        SLNode*          faceAvatar = importer.load(s->animManager(), am, modelPath + "GLTF/Face/face_with_shape_key.gltf", texPath);
+        SLNode*          faceAvatar = importer.load(s->animManager(), am, modelPath + "GLTF/Face/face_one_piece.gltf", texPath, nullptr, false, true, nullptr, 0.0f, false, nullptr, SLProcess_Triangulate | SLProcess_JoinIdenticalVertices | SLProcess_SplitLargeMeshes | SLProcess_RemoveRedundantMaterials | SLProcess_SortByPType | SLProcess_FindDegenerates | SLProcess_FindInvalidData, true);
+        
+        // SLFaceMesh*       faceAnim   = faceAvatar->mesh(); // SLFaceMesh(am);
+        // faceAnim.addMesh(faceAvatar->mesh());
+        // faceAvatar->removeMesh();
+        // faceAvatar->addMesh(&faceAnim);
         faceAvatar->translate(0.0f, 0.0f, 0.0f);
         scene->addChild(faceAvatar);
 

@@ -93,7 +93,7 @@ public:
                            SLProcess_RemoveRedundantMaterials |
                            SLProcess_SortByPType |
                            SLProcess_FindDegenerates |
-                           SLProcess_FindInvalidData
+                           SLProcess_FindInvalidData,
                          //|SLProcess_OptimizeMeshes
                          //|SLProcess_OptimizeGraph
                          //|SLProcess_CalcTangentSpace
@@ -113,6 +113,7 @@ public:
                          //|SLProcess_FlipWindingOrder
                          //|SLProcess_SplitByJointCount
                          //|SLProcess_Dejoint
+                        SLbool isFaceMesh = false
                          ) = 0;
 
     SLNode*         rootNode() { return _sceneRoot; }
