@@ -143,6 +143,8 @@ private:
     SLVVec3f idleFaceLandmarks;
     SLVVec3f maxFaceStretch;
     SLVVec3f minFaceStretch;
+
+private:
     // SLVMesh meshList;
 };
 

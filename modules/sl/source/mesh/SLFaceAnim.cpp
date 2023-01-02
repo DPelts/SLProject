@@ -3,7 +3,16 @@
 #include "SLFaceAnim.h"
 
 #include <prebuilt/win64_mediapipe/include/face_mesh_api.h>
-#include "opencv2/calib3d.hpp"
+
+#define LMK(Index, XYZ) _pFacialLandmarks[Index * 3 + XYZ]
+#define LMK3D(index) LMK(index, 0), LMK(index, 1), LMK(index, 2)
+#define CLAMP_TOP(value) \
+    if (value < 0.0f) { value = 0.0f; }
+#define CLAMP_BOTTOM(value) \
+    if (value > 1.0f) { value = 1.0f; }
+#define CLAMP(value) \
+    if (value < 0.0f) { value = 0.0f; } \
+    if (value > 1.0f) {value = 1.0f; }
 
 SLFaceMesh::SLFaceMesh(SLAssetManager* assetMgr, const SLstring& name) : SLMesh(assetMgr, name)
 {
@@ -23,7 +32,18 @@ void SLFaceMesh::startCapture()
     isCaptureStarted = true;
 }
 
+SLVec3f getCenterPoint(SLVec3f p1, SLVec3f p2)
+{
+    return (p1 + p2) / 2;
+}
 
+SLfloat getLengthAtScale(SLVec3f p1, SLVec3f p2, SLfloat scale)
+{
+    return ((p2 - p1).length()) / scale;
+}
+
+SLfloat minEye = 10.0f;
+SLfloat maxEye = 0.0f;
 
 void SLFaceMesh::draw(SLSceneView* sv, SLNode* node)
 {
@@ -34,81 +54,41 @@ void SLFaceMesh::draw(SLSceneView* sv, SLNode* node)
 
         if (_pFacialLandmarks[0] != 0.0f)
         {
-            SLint imageWidth  = 640;
-            SLint imageHeight = 480;
-            SLint focalLength = 1 * imageWidth;
+            SLVec3f face_Side_Right_Upper = SLVec3f(LMK3D(447));
+            SLVec3f face_Side_Right_Lower = SLVec3f(LMK3D(366));
+            SLVec3f face_Side_Left_Upper = SLVec3f(LMK3D(137));
+            SLVec3f face_Side_Left_Lower = SLVec3f(LMK3D(227));
 
-            int i1 = 1 * 3;
-            int i2 = 33 * 3;
-            int i3 = 263 * 3;
-            int i4 = 61 * 3;
-            int i5 = 291 * 3;
-            int i6 = 199 * 3;
+            SLVec3f right = getCenterPoint(face_Side_Right_Upper, face_Side_Right_Lower);
+            SLVec3f left  = getCenterPoint(face_Side_Left_Upper, face_Side_Left_Lower);
+            SLVec3f pivot = getCenterPoint(right, left);
+            SLfloat pivotLength = (right - left).length() * 3;
+            std::cout << pivotLength << std::endl;
 
-            SLVec2f nose2D = SLVec2f(_pFacialLandmarks[i1 + 0] * imageWidth, _pFacialLandmarks[i1 + 1] * imageHeight);
-            SLVec3f nose3D = SLVec3f(_pFacialLandmarks[i1 + 0] * imageWidth, _pFacialLandmarks[i1 + 1] * imageHeight, _pFacialLandmarks[i1 + 2] * 3000);
+            SLVec3f face_Eye_L_Upper = (SLVec3f(LMK3D(386)) - pivot) / pivotLength;
+            SLVec3f face_Eye_L_Lower = (SLVec3f(LMK3D(374)) - pivot) / pivotLength;
+            SLVec3f face_Eye_R_Upper = (SLVec3f(LMK3D(159)) - pivot) / pivotLength;
+            SLVec3f face_Eye_R_Lower = (SLVec3f(LMK3D(145)) - pivot) / pivotLength;
 
+            SLfloat eye_L_scale = (face_Eye_L_Upper - face_Eye_L_Lower).length();
+            SLfloat eye_L_minus         = eye_L_scale - 0.016f;
+            CLAMP_BOTTOM(eye_L_minus)
+            SLfloat ajusted_eye_L_scale = 1.0f - (eye_L_minus) / 0.025f;
+            CLAMP(ajusted_eye_L_scale)
 
-            SLVVec2f face_2D;
-            face_2D.resize(6);
-            face_2D[0] = SLVec2f(_pFacialLandmarks[i1 + 0] * imageWidth, _pFacialLandmarks[i1 + 1] * imageHeight);
-            face_2D[1] = SLVec2f(_pFacialLandmarks[i2 + 0] * imageWidth, _pFacialLandmarks[i2 + 1] * imageHeight);
-            face_2D[2] = SLVec2f(_pFacialLandmarks[i3 + 0] * imageWidth, _pFacialLandmarks[i3 + 1] * imageHeight);
-            face_2D[3] = SLVec2f(_pFacialLandmarks[i4 + 0] * imageWidth, _pFacialLandmarks[i4 + 1] * imageHeight);
-            face_2D[4] = SLVec2f(_pFacialLandmarks[i5 + 0] * imageWidth, _pFacialLandmarks[i5 + 1] * imageHeight);
-            face_2D[5] = SLVec2f(_pFacialLandmarks[i6 + 0] * imageWidth, _pFacialLandmarks[i6 + 1] * imageHeight);
+            SLfloat eye_R_scale         = (face_Eye_R_Upper - face_Eye_R_Lower).length();
+            SLfloat eye_R_minus = eye_R_scale - 0.016f;
+            CLAMP_BOTTOM(eye_R_minus)
+            SLfloat ajusted_eye_R_scale = 1.0f - (eye_R_minus) / 0.025f;
+            CLAMP(ajusted_eye_R_scale)
 
-            SLVVec3f face_3D;
-            face_3D.resize(6);
-            face_3D[0] = SLVec3f(_pFacialLandmarks[i1 + 0] * imageWidth, _pFacialLandmarks[i1 + 1] * imageHeight,  _pFacialLandmarks[i1 + 2]);
-            face_3D[1] = SLVec3f(_pFacialLandmarks[i2 + 0] * imageWidth, _pFacialLandmarks[i2 + 1] * imageHeight,  _pFacialLandmarks[i2 + 2]);
-            face_3D[2] = SLVec3f(_pFacialLandmarks[i3 + 0] * imageWidth, _pFacialLandmarks[i3 + 1] * imageHeight,  _pFacialLandmarks[i3 + 2]);
-            face_3D[3] = SLVec3f(_pFacialLandmarks[i4 + 0] * imageWidth, _pFacialLandmarks[i4 + 1] * imageHeight,  _pFacialLandmarks[i4 + 2]);
-            face_3D[4] = SLVec3f(_pFacialLandmarks[i5 + 0] * imageWidth, _pFacialLandmarks[i5 + 1] * imageHeight,  _pFacialLandmarks[i5 + 2]);
-            face_3D[5] = SLVec3f(_pFacialLandmarks[i6 + 0] * imageWidth, _pFacialLandmarks[i6 + 1] * imageHeight,  _pFacialLandmarks[i6 + 2]);
-
-            // cv::Mat face2DMat = (cv::Mat_<double>(2, 6) << face_2D[0].x, face_2D[0].y, face_2D[1].x, face_2D[1].y, face_2D[2].x, face_2D[2].y, face_2D[3].x, face_2D[3].y, face_2D[4].x, face_2D[4].y, face_2D[5].x, face_2D[5].y);
-            // cv::Mat face3DMat = (cv::Mat_<double>(3, 6) << face_3D[0].x, face_3D[0].y, face_3D[0].z, face_3D[1].x, face_3D[1].y, face_3D[1].z, face_3D[2].x, face_3D[2].y, face_3D[2].z, face_3D[3].x, face_3D[3].y, face_3D[3].z, face_3D[4].x, face_3D[4].y, face_3D[4].z, face_3D[5].x, face_3D[5].y, face_3D[5].z);
-            
-
-            std::vector<cv::Point2f> face2D;
-            face2D.push_back(cv::Point2f(face_2D[0].x, face_2D[0].y));
-            face2D.push_back(cv::Point2f(face_2D[1].x, face_2D[1].y));
-            face2D.push_back(cv::Point2f(face_2D[2].x, face_2D[2].y));
-            face2D.push_back(cv::Point2f(face_2D[3].x, face_2D[3].y));
-            face2D.push_back(cv::Point2f(face_2D[4].x, face_2D[4].y));
-            face2D.push_back(cv::Point2f(face_2D[5].x, face_2D[5].y));
-
-            std::vector<cv::Point3f> face3D;
-            face3D.push_back(cv::Point3f(face_3D[0].x, face_3D[0].y, face_3D[0].z));
-            face3D.push_back(cv::Point3f(face_3D[1].x, face_3D[1].y, face_3D[1].z));
-            face3D.push_back(cv::Point3f(face_3D[2].x, face_3D[2].y, face_3D[2].z));
-            face3D.push_back(cv::Point3f(face_3D[3].x, face_3D[3].y, face_3D[3].z));
-            face3D.push_back(cv::Point3f(face_3D[4].x, face_3D[4].y, face_3D[4].z));
-            face3D.push_back(cv::Point3f(face_3D[5].x, face_3D[5].y, face_3D[5].z));
+            bsTime[BlendShapeIndex::eyeBlinkLeft] = ajusted_eye_L_scale;
+            transformSkinWithBlendShapes(BlendShapeIndex::eyeBlinkLeft);
+            bsTime[BlendShapeIndex::eyeBlinkRight] = ajusted_eye_R_scale;
+            transformSkinWithBlendShapes(BlendShapeIndex::eyeBlinkRight);
 
 
-            cv::Mat distMat = (cv::Mat_<double>(4, 1) << 0.0f, 0.0f, 0.0f, 0.0f);
-            cv::Mat camMat = (cv::Mat_<double>(3, 3) << focalLength, 0, imageHeight / 2, 0, focalLength, imageWidth / 2, 0, 0, 1);
 
-            cv::Mat rotVec(3, 1, cv::DataType<double>::type);
-            cv::Mat transVec(3, 1, cv::DataType<double>::type);
-            if (cv::solvePnP(face3D, face2D, camMat, distMat, rotVec, transVec))
-            {
-                cv::Mat rMat;
-                cv::Mat jacMat;
-                cv::Rodrigues(rotVec, rMat, jacMat);
-                
-                cv::Mat mtxRMat;
-                cv::Mat mtxQMat;
-                cv::Vec3d angles = cv::RQDecomp3x3(rMat, mtxRMat, mtxQMat);
-
-                SLfloat angleX = (float)angles[0] * 360;
-                SLfloat angleY = (float)angles[1] * 360;
-                SLfloat angleZ = (float)angles[2] * 360;
-
-                std::cout << "( " << angleX << ", " << angleY << " ," << angleZ << " )" << std::endl;
-            } 
         }
     }
     /*
