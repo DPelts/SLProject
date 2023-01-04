@@ -17,7 +17,6 @@
 
 SLFaceMesh::SLFaceMesh(SLAssetManager* assetMgr, const SLstring& name) : SLMesh(assetMgr, name)
 {
-    
 }
 
 SLVec3f getCenterPoint(SLVec3f p1, SLVec3f p2)
@@ -95,16 +94,18 @@ void SLFaceMesh::updateRotatedLocalFLMap()
         SLint index = _usedLandmarkIndicesList[i];
         SLVec3f point = _localFLMap[index];
         SLfloat theta = roll * 0.0174533f;
-        // SLMat3f r     = SLMat3f(1.0f, 0.0f, 0.0f, 0.0f, cos(theta), -sin(theta), 0.0f, sin(theta), cos(theta));
-        SLMat3f r            = SLMat3f(1.0f, 0.0f, 0.0f, 0.0f, cos(theta), sin(theta), 0.0f, -sin(theta), cos(theta));
+        SLMat3f r     = SLMat3f(1.0f, 0.0f, 0.0f, 0.0f, cos(theta), -sin(theta), 0.0f, sin(theta), cos(theta));
+        // SLMat3f r = SLMat3f(1.0f, 0.0f, 0.0f, 0.0f, cos(theta), sin(theta), 0.0f, -sin(theta), cos(theta));
+        SLVec3f temp = r * point;
+        // std::cout << r.m() << std::endl << point << std::endl << temp << std::endl << std::endl;
         point = r * point;
         theta = pitch * 0.0174533f;
-        // r                    = SLMat3f(cos(theta), 0.0f, sin(theta), 0.0f, 1.0f, 0.0f, -sin(theta), 0.0f, cos(theta));
-        r                    = SLMat3f(cos(theta),  0.0f, -sin(theta), 0.0f, 1.0f, 0.0f, sin(theta), 0.0f, cos(theta));
+        r                    = SLMat3f(cos(theta), 0.0f, sin(theta), 0.0f, 1.0f, 0.0f, -sin(theta), 0.0f, cos(theta));
+        // r                    = SLMat3f(cos(theta),  0.0f, -sin(theta), 0.0f, 1.0f, 0.0f, sin(theta), 0.0f, cos(theta));
         point = r * point;
         theta = yaw * 0.0174533 / 2.5f;
-        // r                    = SLMat3f(cos(theta), -sin(theta), 0.0f, sin(theta), cos(theta), 0.0f, 0.0f, 0.0f, 1.0f);
-        r                    = SLMat3f(cos(theta), sin(theta), 0.0f, -sin(theta),  cos(theta),  0.0f, 0.0f, 0.0f, 1.0f);
+        r                    = SLMat3f(cos(theta), -sin(theta), 0.0f, sin(theta), cos(theta), 0.0f, 0.0f, 0.0f, 1.0f);
+        // r                    = SLMat3f(cos(theta), sin(theta), 0.0f, -sin(theta),  cos(theta),  0.0f, 0.0f, 0.0f, 1.0f);
         point = r * point;
         _rotatedFLMap[index] = point;
     }
@@ -206,7 +207,6 @@ void SLFaceMesh::mouthTracking()
     SLfloat cornerRatio = (mouthCornerDist - 0.115) / 0.015f;
     CLAMP_TOP(cornerRatio)
     CLAMP_BOTTOM(cornerRatio)
-    
     SLfloat smilePercent = cornerRatio * topRatio;
     SLfloat dimpelPercent = cornerRatio - smilePercent;
     bsTime[BlendShapeIndex::mouthSmileLeft] = smilePercent;
@@ -217,17 +217,145 @@ void SLFaceMesh::mouthTracking()
     transformSkinWithBlendShapes(BlendShapeIndex::mouthDimpleLeft);
     bsTime[BlendShapeIndex::mouthDimpleRight] = dimpelPercent;
     transformSkinWithBlendShapes(BlendShapeIndex::mouthDimpleRight);
-    std::cout << "topRatio: " << topRatio << "\t cornerRatio: " << cornerRatio << "\t smile: " << smilePercent << "\t dimpel: " << dimpelPercent << std::endl;
+    // std::cout << "topRatio: " << topRatio << "\t cornerRatio: " << cornerRatio << "\t smile: " << smilePercent << "\t dimpel: " << dimpelPercent << std::endl;
+    
     // SLVec3f mouthCornerCenterRotated = getCenterPoint(_rotatedFLMap[FLI::mouth_Corner_L], _rotatedFLMap[FLI::mouth_Corner_R]);
     // SLVec3f mouthLipCenterRotated    = getCenterPoint(_rotatedFLMap[FLI::mouth_UpperLip_Outer], _rotatedFLMap[FLI::mouth_LowerLip_Outer]);
     // SLfloat centerDistRotated        = (mouthCornerCenter.y - mouthLipCenter.y);
-    // std::cout << centerDistRotated << std::endl;
+    // std::cout << "centerDist: " << centerDistRotated << std::endl;
     // SLVec3f eyePivotRotated = getCenterPoint(_rotatedFLMap[FLI::eye_Outer_L], _rotatedFLMap[FLI::eye_Outer_R]);
     // eyePivotRotated.y += mouthLipCenter.y - eyePivotRotated.y;
     // SLfloat mouthCenterOffset = eyePivotRotated.x - mouthLipCenterRotated.x;
-    // std::cout << mouthCenterOffset << std::endl;
+    // std::cout << "" << mouthCenterOffset << std::endl;
 
 }
+
+void SLFaceMesh::irisTracking()
+{
+    SLVec3f eye_L_center = getCenterPoint(_rotatedFLMap[FLI::eye_Inner_L], _rotatedFLMap[FLI::eye_Outer_L]);
+    SLVec3f eye_R_center = getCenterPoint(_rotatedFLMap[FLI::eye_Inner_R], _rotatedFLMap[FLI::eye_Outer_R]);
+    SLVec3f iris_L       = _rotatedFLMap[FLI::iris_L];
+    SLVec3f iris_R       = _rotatedFLMap[FLI::iris_R];
+    SLVec3f diff_L       = iris_L - eye_L_center;
+    SLVec3f diff_R       = iris_R - eye_R_center;
+
+    diff_L.y += 0.058f;
+    if (diff_L.y < 0.0f)
+    {
+        SLfloat ratio = diff_L.y / -0.007f;
+        CLAMP_TOP(ratio)
+        CLAMP_BOTTOM(ratio)
+        bsTime[BlendShapeIndex::eyeLookUpLeft] = ratio;
+        transformSkinWithBlendShapes(BlendShapeIndex::eyeLookUpLeft);
+        bsTime[BlendShapeIndex::eyeLookDownLeft] = 0.0f;
+        transformSkinWithBlendShapes(BlendShapeIndex::eyeLookDownLeft);
+
+        bsTime[BlendShapeIndex::eyeLookUpRight] = ratio;
+        transformSkinWithBlendShapes(BlendShapeIndex::eyeLookUpRight);
+        bsTime[BlendShapeIndex::eyeLookDownRight] = 0.0f;
+        transformSkinWithBlendShapes(BlendShapeIndex::eyeLookDownRight);
+        // std::cout << "Y: " << diff_L.y << "\n Ratio: " << ratio << std::endl << std::endl;
+    }
+    else
+    {
+        SLfloat ratio = diff_L.y / 0.015f;
+        CLAMP_TOP(ratio)
+        CLAMP_BOTTOM(ratio)
+        bsTime[BlendShapeIndex::eyeLookUpLeft] = 0.0f;
+        transformSkinWithBlendShapes(BlendShapeIndex::eyeLookUpLeft);
+        bsTime[BlendShapeIndex::eyeLookDownLeft] = ratio;
+        transformSkinWithBlendShapes(BlendShapeIndex::eyeLookDownLeft);
+
+        bsTime[BlendShapeIndex::eyeLookUpRight] = 0.0f;
+        transformSkinWithBlendShapes(BlendShapeIndex::eyeLookUpRight);
+        bsTime[BlendShapeIndex::eyeLookDownRight] = ratio;
+        transformSkinWithBlendShapes(BlendShapeIndex::eyeLookDownRight);
+        // std::cout << "Y: " << diff_L.y << "\n Ratio: " << ratio << std::endl << std::endl;
+    }
+    
+    diff_L.x += 0.064f;
+    if (diff_L.x < 0.0f)
+    {
+        SLfloat ratio = diff_L.x / -0.009f;
+        CLAMP_TOP(ratio)
+        CLAMP_BOTTOM(ratio)
+        bsTime[BlendShapeIndex::eyeLookInLeft] = ratio;
+        transformSkinWithBlendShapes(BlendShapeIndex::eyeLookInLeft);
+        bsTime[BlendShapeIndex::eyeLookOutLeft] = 0.0f;
+        transformSkinWithBlendShapes(BlendShapeIndex::eyeLookOutLeft);
+
+        bsTime[BlendShapeIndex::eyeLookInRight] = 0.0f;
+        transformSkinWithBlendShapes(BlendShapeIndex::eyeLookInRight);
+        bsTime[BlendShapeIndex::eyeLookOutRight] = ratio;
+        transformSkinWithBlendShapes(BlendShapeIndex::eyeLookOutRight);
+        // std::cout << "In x: " << diff_L.x << "\n Ratio: " << ratio << std::endl << std::endl;
+    }
+    else
+    {
+        SLfloat ratio = diff_L.x / 0.015f;
+        CLAMP_TOP(ratio)
+        CLAMP_BOTTOM(ratio)
+        bsTime[BlendShapeIndex::eyeLookInLeft] = 0.0f;
+        transformSkinWithBlendShapes(BlendShapeIndex::eyeLookInLeft);
+        bsTime[BlendShapeIndex::eyeLookOutLeft] = ratio;
+        transformSkinWithBlendShapes(BlendShapeIndex::eyeLookOutLeft);
+
+        bsTime[BlendShapeIndex::eyeLookInRight] = ratio;
+        transformSkinWithBlendShapes(BlendShapeIndex::eyeLookInRight);
+        bsTime[BlendShapeIndex::eyeLookOutRight] = 0.0f;
+        transformSkinWithBlendShapes(BlendShapeIndex::eyeLookOutRight);
+        // std::cout << "Out x: " << diff_L.x << "\n Ratio: " << ratio << std::endl << std::endl;
+    }
+    
+    // std::cout << "[ " << diff_R.x << ", " << diff_R.y << " ]" << std::endl;
+    // diff_R.y += 0.058f;
+    // if (diff_R.y < 0.0f)
+    // {
+    //     SLfloat ratio = diff_R.y / -0.007f;
+    //     CLAMP_TOP(ratio)
+    //     CLAMP_BOTTOM(ratio)
+    //     bsTime[BlendShapeIndex::eyeLookUpRight] = ratio;
+    //     transformSkinWithBlendShapes(BlendShapeIndex::eyeLookUpRight);
+    //     bsTime[BlendShapeIndex::eyeLookDownRight] = 0.0f;
+    //     transformSkinWithBlendShapes(BlendShapeIndex::eyeLookDownRight);
+    // }
+    // else
+    // {
+    //     SLfloat ratio = diff_R.y / 0.015f;
+    //     CLAMP_TOP(ratio)
+    //     CLAMP_BOTTOM(ratio)
+    //     bsTime[BlendShapeIndex::eyeLookUpRight] = 0.0f;
+    //     transformSkinWithBlendShapes(BlendShapeIndex::eyeLookUpRight);
+    //     bsTime[BlendShapeIndex::eyeLookDownRight] = ratio;
+    //     transformSkinWithBlendShapes(BlendShapeIndex::eyeLookDownRight);
+    // }
+    // 
+    // diff_R.x = 0.062f;
+    // if (diff_R.x < 0.0f)
+    // {
+    //     SLfloat ratio = diff_R.x / 0.01f;
+    //     std::cout << "Ratio: " << ratio << std::endl;
+    //     CLAMP_TOP(ratio)
+    //     CLAMP_BOTTOM(ratio)
+    //     bsTime[BlendShapeIndex::eyeLookInRight] = 0.0f;
+    //     transformSkinWithBlendShapes(BlendShapeIndex::eyeLookInRight);
+    //     bsTime[BlendShapeIndex::eyeLookOutRight] = ratio;
+    //     transformSkinWithBlendShapes(BlendShapeIndex::eyeLookOutRight);
+    // }
+    // else
+    // {
+    //     SLfloat ratio = diff_R.x / -0.02f;
+    //     std::cout << "Ratio: " << ratio << std::endl;
+    //     CLAMP_TOP(ratio)
+    //     CLAMP_BOTTOM(ratio)
+    //     bsTime[BlendShapeIndex::eyeLookInRight] = ratio;
+    //     transformSkinWithBlendShapes(BlendShapeIndex::eyeLookInRight);
+    //     bsTime[BlendShapeIndex::eyeLookOutRight] = 0.0f;
+    //     transformSkinWithBlendShapes(BlendShapeIndex::eyeLookOutRight);
+    // }
+}
+
+void SLFaceMesh::cheekSquintTracking()
 
 void SLFaceMesh::draw(SLSceneView* sv, SLNode* node)
 {
@@ -251,10 +379,19 @@ void SLFaceMesh::draw(SLSceneView* sv, SLNode* node)
             updateLocalFLMap(pivot, pivotLength);
             updateRotatedLocalFLMap();
 
+            // Testing pivot and scale
+            // SLVec3f rightRot       = getCenterPoint(_localFLMap[FLI::face_Side_R_Upper], _localFLMap[FLI::face_Side_R_Lower]);
+            // SLVec3f leftRot        = getCenterPoint(_localFLMap[FLI::face_Side_L_Upper], _localFLMap[FLI::face_Side_L_Lower]);
+            // SLVec3f pivotRot       = getCenterPoint(rightRot, leftRot);
+            // SLfloat pivotLengthRot = (rightRot - leftRot).length();
+            // std::cout << "Pivot: " << pivot << "\t PivotRot: " << pivotRot << "\t PivotLength: " << pivotLength << std::endl
+            //           << "\t PivotLengthRot: " << pivotLengthRot << "RightRot: " << rightRot << std::endl;
+
             eyeBlinkTracking();
             jawTracking();
             mouthTracking();
-
+            irisTracking();
+            cheekSquintTracking();
 
 
         }
