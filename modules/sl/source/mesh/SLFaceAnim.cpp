@@ -11,10 +11,8 @@
     if (value > 1.0f) { value = 1.0f; }
 #define CLAMP_BOTTOM(value) \
     if (value < 0.0f) { value = 0.0f; }
-#define CLAMP(value) \
-    if (value < 0.0f) { value = 0.0f; } \
-    if (value > 1.0f) {value = 1.0f; }
-
+#define CLAMP(value) CLAMP_TOP(value) \
+                     CLAMP_TOP(value)
 SLFaceMesh::SLFaceMesh(SLAssetManager* assetMgr, const SLstring& name) : SLMesh(assetMgr, name)
 {
 }
@@ -153,9 +151,9 @@ void SLFaceMesh::eyeBlinkTracking()
 
 void SLFaceMesh::jawTracking()
 {
-    // SLVec3f eyePivot = getCenterPoint(_rotatedFLMap[FLI::eye_Outer_L], _rotatedFLMap[FLI::eye_Outer_L]);
+    // SLVec3f eyePivot = getCenterPoint(_rotatedFLMap[FLI::eye_L_Outer], _rotatedFLMap[FLI::eye_L_Outer]);
     // SLVec3f jaw       = _rotatedFLMap[FLI::jaw];
-    SLVec3f eyePivot = getCenterPoint(_localFLMap[FLI::eye_Outer_L], _localFLMap[FLI::eye_Outer_R]);
+    SLVec3f eyePivot = getCenterPoint(_localFLMap[FLI::eye_L_Outer], _localFLMap[FLI::eye_R_Outer]);
     SLVec3f jaw       = _localFLMap[FLI::jaw];
     // SLVec3f diff            = jaw - eyePivot;
     SLfloat diff            = (jaw - eyePivot).length();
@@ -223,7 +221,7 @@ void SLFaceMesh::mouthTracking()
     // SLVec3f mouthLipCenterRotated    = getCenterPoint(_rotatedFLMap[FLI::mouth_UpperLip_Outer], _rotatedFLMap[FLI::mouth_LowerLip_Outer]);
     // SLfloat centerDistRotated        = (mouthCornerCenter.y - mouthLipCenter.y);
     // std::cout << "centerDist: " << centerDistRotated << std::endl;
-    // SLVec3f eyePivotRotated = getCenterPoint(_rotatedFLMap[FLI::eye_Outer_L], _rotatedFLMap[FLI::eye_Outer_R]);
+    // SLVec3f eyePivotRotated = getCenterPoint(_rotatedFLMap[FLI::eye_L_Outer], _rotatedFLMap[FLI::eye_R_Outer]);
     // eyePivotRotated.y += mouthLipCenter.y - eyePivotRotated.y;
     // SLfloat mouthCenterOffset = eyePivotRotated.x - mouthLipCenterRotated.x;
     // std::cout << "" << mouthCenterOffset << std::endl;
@@ -232,8 +230,8 @@ void SLFaceMesh::mouthTracking()
 
 void SLFaceMesh::irisTracking()
 {
-    SLVec3f eye_L_center = getCenterPoint(_rotatedFLMap[FLI::eye_Inner_L], _rotatedFLMap[FLI::eye_Outer_L]);
-    SLVec3f eye_R_center = getCenterPoint(_rotatedFLMap[FLI::eye_Inner_R], _rotatedFLMap[FLI::eye_Outer_R]);
+    SLVec3f eye_L_center = getCenterPoint(_rotatedFLMap[FLI::eye_L_Inner], _rotatedFLMap[FLI::eye_L_Outer]);
+    SLVec3f eye_R_center = getCenterPoint(_rotatedFLMap[FLI::eye_R_Inner], _rotatedFLMap[FLI::eye_R_Outer]);
     SLVec3f iris_L       = _rotatedFLMap[FLI::iris_L];
     SLVec3f iris_R       = _rotatedFLMap[FLI::iris_R];
     SLVec3f diff_L       = iris_L - eye_L_center;
@@ -356,6 +354,76 @@ void SLFaceMesh::irisTracking()
 }
 
 void SLFaceMesh::cheekSquintTracking()
+{
+    SLfloat cheek_L_Dist = (_localFLMap[FLI::mouth_Corner_R] - _localFLMap[FLI::eye_L_Outer]).length();
+    SLfloat cheek_R_Dist = (_localFLMap[FLI::mouth_Corner_L] - _localFLMap[FLI::eye_R_Outer]).length();
+
+    SLfloat cheek_L_Ratio = (cheek_L_Dist - 0.22f) / -0.045f;
+    SLfloat cheek_R_Ratio = (cheek_R_Dist - 0.22f) / -0.045f;
+    
+    CLAMP_TOP(cheek_L_Ratio)
+    CLAMP_TOP(cheek_R_Ratio)
+    CLAMP_BOTTOM(cheek_L_Ratio)
+    CLAMP_BOTTOM(cheek_R_Ratio)
+
+    bsTime[BlendShapeIndex::cheekSquintLeft] = cheek_L_Ratio;
+    transformSkinWithBlendShapes(BlendShapeIndex::cheekSquintLeft);
+    bsTime[BlendShapeIndex::cheekSquintRight] = cheek_R_Ratio;
+    transformSkinWithBlendShapes(BlendShapeIndex::cheekSquintRight);
+}
+
+void SLFaceMesh::browTracking()
+{
+    SLfloat brow_L_Outer_Dist = (_localFLMap[FLI::face_Top_L_Outer] - _localFLMap[FLI::brow_Outer_L]).length();
+    SLfloat brow_R_Outer_Dist = (_localFLMap[FLI::face_Top_R_Outer] - _localFLMap[FLI::brow_Outer_R]).length();
+    // std::cout << "Brow_L_Dist: " << brow_L_Outer_Dist << std::endl;
+    SLfloat brow_L_Outer_Ratio = (brow_L_Outer_Dist - 0.11f) / -0.036f;
+    SLfloat brow_R_Outer_Ratio = (brow_R_Outer_Dist - 0.11f) / -0.036f;
+    CLAMP_TOP(brow_L_Outer_Ratio)
+    CLAMP_TOP(brow_R_Outer_Ratio)
+    CLAMP_BOTTOM(brow_L_Outer_Ratio)
+    CLAMP_BOTTOM(brow_R_Outer_Ratio)
+    bsTime[BlendShapeIndex::browOuterUpLeft] = brow_L_Outer_Ratio;
+    transformSkinWithBlendShapes(BlendShapeIndex::browOuterUpLeft);
+    bsTime[BlendShapeIndex::browOuterUpRight] = brow_R_Outer_Ratio;
+    transformSkinWithBlendShapes(BlendShapeIndex::browOuterUpRight);
+
+    SLfloat brow_L_Inner_Dist = (_localFLMap[FLI::face_Top_L_Inner] - _localFLMap[FLI::brow_Inner_L]).length();
+    SLfloat brow_R_Inner_Dist = (_localFLMap[FLI::face_Top_R_Inner] - _localFLMap[FLI::brow_Inner_R]).length();
+    SLfloat brow_L_Inner_Ratio = (brow_L_Inner_Dist - 0.14f);
+    SLfloat brow_R_Inner_Ratio = (brow_R_Inner_Dist - 0.14f);
+
+    if (brow_L_Inner_Ratio < 0.0f && brow_R_Inner_Ratio < 0.0f)
+    {
+        brow_L_Inner_Ratio /= -0.03f;
+        CLAMP_TOP(brow_L_Inner_Ratio)
+        CLAMP_BOTTOM(brow_L_Inner_Ratio)
+        bsTime[BlendShapeIndex::browInnerUp] = brow_L_Inner_Ratio;
+        transformSkinWithBlendShapes(BlendShapeIndex::browInnerUp);
+        bsTime[BlendShapeIndex::browDownLeft] = 0.0f;
+        transformSkinWithBlendShapes(BlendShapeIndex::browDownLeft);
+        bsTime[BlendShapeIndex::browDownRight] = 0.0f;
+        transformSkinWithBlendShapes(BlendShapeIndex::browDownRight);
+        // std::cout << "browInnerUp: " << brow_L_Inner_Ratio << std::endl;
+    }
+    else
+    {
+        brow_L_Inner_Ratio /= 0.017f;
+        brow_R_Inner_Ratio /= 0.017f;
+        CLAMP_TOP(brow_L_Inner_Ratio)
+        CLAMP_TOP(brow_R_Inner_Ratio)
+        CLAMP_BOTTOM(brow_L_Inner_Ratio)
+        CLAMP_BOTTOM(brow_R_Inner_Ratio)
+        bsTime[BlendShapeIndex::browInnerUp] = 0.0f;
+        transformSkinWithBlendShapes(BlendShapeIndex::browInnerUp);
+        bsTime[BlendShapeIndex::browDownLeft] = brow_L_Inner_Ratio;
+        transformSkinWithBlendShapes(BlendShapeIndex::browDownLeft);
+        bsTime[BlendShapeIndex::browDownRight] = brow_R_Inner_Ratio;
+        transformSkinWithBlendShapes(BlendShapeIndex::browDownRight);
+        // std::cout << "browDownLeft: " << brow_L_Inner_Ratio << std::endl;
+        // std::cout << "browDownRight: " << brow_R_Inner_Ratio << std::endl;
+    }
+}
 
 void SLFaceMesh::draw(SLSceneView* sv, SLNode* node)
 {
@@ -391,50 +459,10 @@ void SLFaceMesh::draw(SLSceneView* sv, SLNode* node)
             jawTracking();
             mouthTracking();
             irisTracking();
+            browTracking();
             cheekSquintTracking();
-
-
         }
     }
-    /*
-    if (isCaptureStarted)
-    {
-        mediapipeStatus = FACE_MESH_UPDATE();
-        // _pFacialLandmarks = FACE_MESH_GET_FACE_LANDMARKS();
-
-        if (hasFirstFrameBeenRecorded)
-        {
-            SLVec3f currentOrigin = SLVec3f(_pFacialLandmarks[originIndex+0], _pFacialLandmarks[originIndex+1], _pFacialLandmarks[originIndex+2]);
-
-            // Recalibrate
-            if (_pFacialLandmarks[FaceLandmarkIndex::jaw * 3 + 1] - currentOrigin.y < minFaceStretch[FaceLandmarkIndex::jaw].y)
-            {
-                minFaceStretch[FaceLandmarkIndex::jaw].y = _pFacialLandmarks[FaceLandmarkIndex::jaw * 3 + 1] - currentOrigin.y;
-            }
-
-            // Apply
-
-            // Jaw
-            bsTime[BlendShapeIndex::jawOpen] = (_pFacialLandmarks[FaceLandmarkIndex::jaw * 3 + 1] - currentOrigin.y) / minFaceStretch[FaceLandmarkIndex::jaw].y;
-            transformSkinWithBlendShapes(BlendShapeIndex::jawOpen);
-        }
-        else
-        {
-            SLVec3f origin = SLVec3f(_pFacialLandmarks[originIndex], _pFacialLandmarks[originIndex + 0], _pFacialLandmarks[originIndex + 2]);
-            int     size   = FACE_MESH_GET_FACE_LANDMARKS_SIZE() / 3;
-
-            for (int i = 0; i < size; i++)
-            {
-                int     index        = i * 3;
-                SLVec3f landmark     = SLVec3f(_pFacialLandmarks[i], _pFacialLandmarks[i + 1], _pFacialLandmarks[i + 2]) - origin;
-                idleFaceLandmarks[i] = landmark;
-                maxFaceStretch[i]    = landmark;
-                minFaceStretch[i]    = landmark;
-            }
-            if (_pFacialLandmarks[0] != 0.0f)
-                hasFirstFrameBeenRecorded = true;
-        }
-    }
-    */
+   
     SLMesh::draw(sv, node);
 }

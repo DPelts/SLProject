@@ -80,17 +80,17 @@ private:
 
     enum FLI // FaceLandmarkIndex
     {
-        eye_Lid_L_Upper   = 386,
-        eye_Lid_L_Lower   = 374,
-        eye_Lid_R_Upper   = 159,
-        eye_Lid_R_Lower   = 145,
-        eye_Outer_L       = 33,
-        eye_Outer_R       = 263,
-        eye_Inner_L          = 133,
-        eye_Inner_R          = 362,
-        face_Side_R_Upper = 447,
-        face_Side_R_Lower = 366,
-        face_Side_L_Upper = 137,
+        eye_Lid_L_Upper      = 386,
+        eye_Lid_L_Lower      = 374,
+        eye_Lid_R_Upper      = 159,
+        eye_Lid_R_Lower      = 145,
+        eye_L_Outer          = 33,
+        eye_R_Outer          = 263,
+        eye_L_Inner          = 133,
+        eye_R_Inner          = 362,
+        face_Side_R_Upper    = 447,
+        face_Side_R_Lower    = 366,
+        face_Side_L_Upper    = 137,
         face_Side_L_Lower    = 227,
         nose                 = 5,
         jaw                  = 152,
@@ -100,6 +100,14 @@ private:
         mouth_Corner_R       = 61,
         iris_R               = 473,
         iris_L               = 468,
+        brow_Outer_L         = 105,
+        brow_Outer_R         = 334,
+        brow_Inner_L         = 107,
+        brow_Inner_R         = 336,
+        face_Top_L_Outer     = 103,
+        face_Top_R_Outer     = 332,
+        face_Top_L_Inner     = 109,
+        face_Top_R_Inner     = 338,
     };
 
     SLbool    isCaptureStarted          = false;
@@ -112,7 +120,7 @@ private:
     SLVVec3f  minFaceStretch;
 
 private:
-    #define FLISIZE 18
+    #define FLISIZE 26
     SLint _usedLandmarkIndicesList[FLISIZE]
     {
       FLI::eye_Lid_L_Upper,
@@ -131,8 +139,16 @@ private:
       FLI::mouth_Corner_R,
       FLI::iris_R,
       FLI::iris_L,
-      FLI::eye_Inner_L,
-      FLI::eye_Inner_R,
+      FLI::eye_L_Inner,
+      FLI::eye_R_Inner,
+      FLI::brow_Outer_L,
+      FLI::brow_Outer_R,
+      FLI::brow_Inner_L,
+      FLI::brow_Inner_R,
+      FLI::face_Top_L_Outer,
+      FLI::face_Top_R_Outer,
+      FLI::face_Top_L_Inner,
+      FLI::face_Top_R_Inner,
     };
 
     std::unordered_map<SLint, SLVec3f> _localFLMap;
