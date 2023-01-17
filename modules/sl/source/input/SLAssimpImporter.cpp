@@ -1088,7 +1088,8 @@ SLMesh* SLAssimpImporter::loadMesh(SLAssetManager* am, aiMesh* mesh)
             {
                 m->BS[i].clear();
                 m->BS[i].resize(blendShapeLength);
-                m->bsTime[i] = 0.0f;
+                m->bsTime[i]       = 0.0f;
+                m->bsTimePrevious[i]       = 0.0f;
                 m->bsHasChanged[i] = false;
                 m->bsCount++;
                 
@@ -1360,6 +1361,7 @@ SLFaceMesh* SLAssimpImporter::loadFaceMesh(SLAssetManager* am, aiMesh* mesh)
                 m->BS[i].clear();
                 m->BS[i].resize(blendShapeLength);
                 m->bsTime[i]       = 0.0f;
+                m->bsTimePrevious[i]       = 0.0f;
                 m->bsHasChanged[i] = false;
                 m->bsCount++;
 

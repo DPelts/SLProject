@@ -131,6 +131,8 @@ private:
       FLI::face_Side_R_Lower,
       FLI::face_Side_L_Upper,
       FLI::face_Side_L_Lower,
+      // FLI::eye_L_Outer,
+      // FLI::eye_R_Outer,
       FLI::nose,
       FLI::jaw,
       FLI::mouth_UpperLip_Outer,

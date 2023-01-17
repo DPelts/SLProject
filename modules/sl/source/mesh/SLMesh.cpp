@@ -1568,8 +1568,8 @@ void SLMesh::transformSkinWithBlendShapes(SLint bsID)
     if (skinnedP.empty())
     {
         skinnedP.resize(P.size());
-        // for (SLulong i = 0; i < P.size(); ++i)
-        //     skinnedP[i] = P[i];
+        for (SLulong i = 0; i < P.size(); ++i)
+             skinnedP[i] = P[i];
     }
 
     // notify Parent Nodes to update AABB
@@ -1580,15 +1580,24 @@ void SLMesh::transformSkinWithBlendShapes(SLint bsID)
 
     _accelStructIsOutOfDate = true;
 
+    // for (SLint i = 0; i < BS[0].size(); i++)
+    // {
+    //     skinnedP[i] = P[i];
+    //     for (SLint j = 0; j < bsCount; j++)
+    //     {
+    //         SLVec3f dir = (BS[j][i] - P[i]) * bsTime[j];
+    //         skinnedP[i] += dir;
+    //     }
+    // }
+
+
     for (SLint i = 0; i < BS[0].size(); i++)
     {
-        skinnedP[i] = P[i];
-        for (SLint j = 0; j < bsCount; j++)
-        {
-            SLVec3f dir = (BS[j][i] - P[i]) * bsTime[j];
-            skinnedP[i] += dir;
-        }
+        SLVec3f dir = (BS[bsID][i] - P[i]) * (bsTime[bsID] - bsTimePrevious[bsID]);
+        skinnedP[i] += dir;
     }
+
+    bsTimePrevious[bsID] = bsTime[bsID];
 
     if (_vao.vaoID())
     {
